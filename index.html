@@ -6,546 +6,510 @@
     <title>Family Check-Point</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        accent: '#f59e0b',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f97316'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f9ff;
+        }
+        
         .map-container {
-            height: 400px;
-            width: 100%;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            height: 500px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
         }
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-        .status-green {
-            background-color: #10B981;
-        }
-        .status-yellow {
-            background-color: #F59E0B;
-        }
-        .status-red {
-            background-color: #EF4444;
-        }
-        .family-card:hover {
-            transform: translateY(-4px);
+        
+        .map-marker {
+            position: absolute;
+            transform: translate(-50%, -100%);
             transition: all 0.3s ease;
         }
-        .checkpoint-form {
-            scroll-behavior: smooth;
+        
+        .map-marker:hover {
+            transform: translate(-50%, -100%) scale(1.1);
+            z-index: 10;
         }
-        .animate-pulse {
+        
+        .pulse {
             animation: pulse 2s infinite;
         }
+        
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-            100% {
-                opacity: 1;
-            }
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        .communication-mode {
+            transition: all 0.3s ease;
+        }
+        
+        .communication-mode:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .checkin-card {
+            transition: all 0.3s ease;
+        }
+        
+        .checkin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-ring circle {
+            transition: stroke-dashoffset 0.5s ease;
         }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
-    <!-- Navigation -->
-    <nav class="bg-indigo-700 text-white shadow-lg">
+<body class="bg-blue-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-primary text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+            <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
-                        <i class="fas fa-users text-2xl mr-2"></i>
-                        <span class="text-xl font-bold">Family Check-Point</span>
+                        <i class="fas fa-map-marker-alt text-accent text-2xl mr-2"></i>
+                        <span class="font-bold text-xl">Family Check-Point</span>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="#" class="bg-secondary text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                            <a href="#" class="text-blue-200 hover:bg-secondary hover:text-white px-3 py-2 rounded-md text-sm font-medium">Map</a>
+                            <a href="#" class="text-blue-200 hover:bg-secondary hover:text-white px-3 py-2 rounded-md text-sm font-medium">Contacts</a>
+                            <a href="#" class="text-blue-200 hover:bg-secondary hover:text-white px-3 py-2 rounded-md text-sm font-medium">Communication</a>
+                        </div>
                     </div>
                 </div>
                 <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-900">Dashboard</a>
-                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Map</a>
-                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Family</a>
-                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Calendar</a>
-                        <a href="#" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Settings</a>
+                    <div class="ml-4 flex items-center md:ml-6">
+                        <button class="bg-secondary p-1 rounded-full text-white hover:text-white focus:outline-none">
+                            <i class="fas fa-bell text-lg"></i>
+                        </button>
+                        <div class="ml-3 relative">
+                            <div class="flex items-center">
+                                <div class="text-sm">
+                                    <div class="font-medium text-white">John Anderson</div>
+                                    <div class="text-blue-200">Family Admin</div>
+                                </div>
+                                <div class="ml-3">
+                                    <img class="h-10 w-10 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="User profile">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="md:hidden">
-                    <button class="mobile-menu-button p-2 rounded-md text-white hover:bg-indigo-600 focus:outline-none">
-                        <i class="fas fa-bars"></i>
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" class="bg-primary inline-flex items-center justify-center p-2 rounded-md text-white hover:text-white hover:bg-secondary focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
                     </button>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Mobile menu -->
-        <div class="mobile-menu hidden md:hidden bg-indigo-800">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium bg-indigo-900">Dashboard</a>
-                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-600">Map</a>
-                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-600">Family</a>
-                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-600">Calendar</a>
-                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-indigo-600">Settings</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="px-4 py-6 sm:px-0">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Family Dashboard</h1>
-                <div class="relative">
-                    <button id="checkpointBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg flex items-center">
-                        <i class="fas fa-calendar-check mr-2"></i> Monthly Check-Point
-                    </button>
-                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse">1</span>
-                </div>
-            </div>
-            
-            <!-- Status Summary -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="flex items-center">
-                        <span class="status-dot status-green"></span>
-                        <h3 class="text-lg font-medium text-gray-900">Safe</h3>
-                    </div>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">12</p>
-                    <p class="mt-1 text-sm text-gray-500">Family members checked in</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="flex items-center">
-                        <span class="status-dot status-yellow"></span>
-                        <h3 class="text-lg font-medium text-gray-900">Pending</h3>
-                    </div>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">3</p>
-                    <p class="mt-1 text-sm text-gray-500">Waiting for response</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="flex items-center">
-                        <span class="status-dot status-red"></span>
-                        <h3 class="text-lg font-medium text-gray-900">Needs Help</h3>
-                    </div>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">1</p>
-                    <p class="mt-1 text-sm text-gray-500">Require assistance</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="flex items-center">
-                        <i class="fas fa-map-marker-alt text-indigo-600 mr-2"></i>
-                        <h3 class="text-lg font-medium text-gray-900">Locations</h3>
-                    </div>
-                    <p class="mt-2 text-3xl font-bold text-gray-900">7</p>
-                    <p class="mt-1 text-sm text-gray-500">Different locations</p>
-                </div>
-            </div>
-            
-            <!-- Map and Family Members -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Map Section -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-semibold text-gray-800">Family Locations</h2>
-                            <div class="flex space-x-2">
-                                <button class="bg-gray-100 hover:bg-gray-200 text-gray-800 py-1 px-3 rounded text-sm">
-                                    <i class="fas fa-layer-group mr-1"></i> Layers
-                                </button>
-                                <button class="bg-gray-100 hover:bg-gray-200 text-gray-800 py-1 px-3 rounded text-sm">
-                                    <i class="fas fa-search mr-1"></i> Search
-                                </button>
-                            </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- Left Column -->
+            <div class="w-full md:w-2/3">
+                <!-- Dashboard Header -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">Family Dashboard</h1>
+                            <p class="text-gray-600 mt-2">Monitor your family members' locations and status</p>
                         </div>
-                        <div class="map-container" id="familyMap"></div>
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <span class="status-dot status-green"></span> Safe
-                            </span>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                <span class="status-dot status-yellow"></span> Pending
-                            </span>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <span class="status-dot status-red"></span> Needs Help
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Family Members List -->
-                <div>
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-semibold text-gray-800">Family Members</h2>
-                            <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-1 px-3 rounded">
-                                <i class="fas fa-plus mr-1"></i> Add
+                        <div class="mt-4 md:mt-0">
+                            <button class="bg-primary hover:bg-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center">
+                                <i class="fas fa-plus mr-2"></i> Add Family Member
                             </button>
                         </div>
-                        <div class="space-y-4">
-                            <!-- Family Member Card -->
-                            <div class="family-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-                                <div class="flex items-start">
-                                    <img class="w-12 h-12 rounded-full object-cover mr-3" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Sarah Johnson">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between">
-                                            <h3 class="font-medium text-gray-900">Sarah Johnson</h3>
-                                            <span class="status-dot status-green"></span>
-                                        </div>
-                                        <p class="text-sm text-gray-600">Austin, TX</p>
-                                        <div class="mt-2 flex space-x-2">
-                                            <button class="text-indigo-600 hover:text-indigo-800">
-                                                <i class="fab fa-whatsapp"></i>
-                                            </button>
-                                            <button class="text-blue-600 hover:text-blue-800">
-                                                <i class="fas fa-phone"></i>
-                                            </button>
-                                            <button class="text-gray-600 hover:text-gray-800">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Family Member Card -->
-                            <div class="family-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-                                <div class="flex items-start">
-                                    <img class="w-12 h-12 rounded-full object-cover mr-3" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Michael Smith">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between">
-                                            <h3 class="font-medium text-gray-900">Michael Smith</h3>
-                                            <span class="status-dot status-yellow"></span>
-                                        </div>
-                                        <p class="text-sm text-gray-600">Pending Check-In</p>
-                                        <div class="mt-2 flex space-x-2">
-                                            <button class="text-indigo-600 hover:text-indigo-800">
-                                                <i class="fab fa-whatsapp"></i>
-                                            </button>
-                                            <button class="text-blue-600 hover:text-blue-800">
-                                                <i class="fas fa-phone"></i>
-                                            </button>
-                                            <button class="text-gray-600 hover:text-gray-800">
-                                                <i class="fas fa-bell"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Family Member Card -->
-                            <div class="family-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-                                <div class="flex items-start">
-                                    <img class="w-12 h-12 rounded-full object-cover mr-3" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Emily Davis">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between">
-                                            <h3 class="font-medium text-gray-900">Emily Davis</h3>
-                                            <span class="status-dot status-red"></span>
-                                        </div>
-                                        <p class="text-sm text-gray-600">Needs: First Aid</p>
-                                        <div class="mt-2 flex space-x-2">
-                                            <button class="text-indigo-600 hover:text-indigo-800">
-                                                <i class="fab fa-whatsapp"></i>
-                                            </button>
-                                            <button class="text-blue-600 hover:text-blue-800">
-                                                <i class="fas fa-phone"></i>
-                                            </button>
-                                            <button class="text-red-600 hover:text-red-800">
-                                                <i class="fas fa-first-aid"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Family Member Card -->
-                            <div class="family-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-                                <div class="flex items-start">
-                                    <img class="w-12 h-12 rounded-full object-cover mr-3" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Robert Wilson">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between">
-                                            <h3 class="font-medium text-gray-900">Robert Wilson</h3>
-                                            <span class="status-dot status-green"></span>
-                                        </div>
-                                        <p class="text-sm text-gray-600">Chicago, IL</p>
-                                        <div class="mt-2 flex space-x-2">
-                                            <button class="text-indigo-600 hover:text-indigo-800">
-                                                <i class="fab fa-whatsapp"></i>
-                                            </button>
-                                            <button class="text-blue-600 hover:text-blue-800">
-                                                <i class="fas fa-phone"></i>
-                                            </button>
-                                            <button class="text-gray-600 hover:text-gray-800">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </main>
 
-    <!-- Check-Point Modal -->
-    <div id="checkpointModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <i class="fas fa-calendar-check text-indigo-600"></i>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Monthly Family Check-Point</h3>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">Please update your current status and location information for your family.</p>
-                            </div>
+                <!-- Map Section -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">Family Locations</h2>
+                        <div class="flex space-x-2">
+                            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded-lg text-sm">
+                                <i class="fas fa-filter mr-1"></i> Filter
+                            </button>
+                            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded-lg text-sm">
+                                <i class="fas fa-sync-alt mr-1"></i> Refresh
+                            </button>
                         </div>
                     </div>
                     
-                    <!-- Check-Point Form -->
-                    <div class="mt-6 checkpoint-form">
-                        <div class="space-y-6">
-                            <!-- Current Location -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">1. Where are you currently located?</label>
-                                <div class="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <input type="text" placeholder="Building name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="City" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="State" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                    </div>
-                                    <div>
-                                        <input type="text" placeholder="Country" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <div class="map-container relative">
+                        <!-- Map background with grid -->
+                        <div class="absolute inset-0 bg-blue-50">
+                            <svg width="100%" height="100%">
+                                <defs>
+                                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#dbeafe" stroke-width="1"/>
+                                    </pattern>
+                                </defs>
+                                <rect width="100%" height="100%" fill="url(#grid)" />
+                            </svg>
+                        </div>
+                        
+                        <!-- Map markers -->
+                        <div class="map-marker" style="top: 30%; left: 40%;">
+                            <div class="relative">
+                                <div class="w-12 h-12 rounded-full bg-success flex items-center justify-center pulse">
+                                    <i class="fas fa-user text-white text-lg"></i>
+                                </div>
+                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white shadow-lg rounded-lg p-2 w-48">
+                                    <div class="font-semibold">Sarah Johnson</div>
+                                    <div class="text-sm text-gray-600">New York, NY</div>
+                                    <div class="flex items-center mt-1">
+                                        <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                        <span class="text-xs text-green-600">All Good</span>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Children's Location -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">2. Where are all your children?</label>
-                                <div class="mt-1 space-y-2">
-                                    <div class="flex items-center">
-                                        <input id="same-location" name="children-location" type="radio" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                                        <label for="same-location" class="ml-2 block text-sm text-gray-700">Same as my current location</label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="different-location" name="children-location" type="radio" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                                        <label for="different-location" class="ml-2 block text-sm text-gray-700">Different location</label>
-                                    </div>
-                                    <div id="children-location-fields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                                        <div>
-                                            <input type="text" placeholder="Building name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="City" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="State" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                        </div>
-                                        <div>
-                                            <input type="text" placeholder="Country" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                        </div>
+                        </div>
+                        
+                        <div class="map-marker" style="top: 60%; left: 70%;">
+                            <div class="relative">
+                                <div class="w-12 h-12 rounded-full bg-warning flex items-center justify-center">
+                                    <i class="fas fa-user text-white text-lg"></i>
+                                </div>
+                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white shadow-lg rounded-lg p-2 w-48">
+                                    <div class="font-semibold">Michael Anderson</div>
+                                    <div class="text-sm text-gray-600">Chicago, IL</div>
+                                    <div class="flex items-center mt-1">
+                                        <span class="h-2 w-2 rounded-full bg-yellow-500 mr-1"></span>
+                                        <span class="text-xs text-yellow-600">Needs Check-in</span>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Contact Information -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">3. Do you have contact information to speak directly via chat or text?</label>
-                                <div class="mt-1 space-y-2">
-                                    <div class="flex items-center">
-                                        <input id="whatsapp" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                        <label for="whatsapp" class="ml-2 block text-sm text-gray-700">
-                                            <i class="fab fa-whatsapp text-green-500 mr-1"></i> WhatsApp
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="phone" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                        <label for="phone" class="ml-2 block text-sm text-gray-700">
-                                            <i class="fas fa-phone text-blue-500 mr-1"></i> Phone Call
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="sms" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                        <label for="sms" class="ml-2 block text-sm text-gray-700">
-                                            <i class="fas fa-sms text-indigo-500 mr-1"></i> Text Message
-                                        </label>
+                        </div>
+                        
+                        <div class="map-marker" style="top: 45%; left: 25%;">
+                            <div class="relative">
+                                <div class="w-12 h-12 rounded-full bg-success flex items-center justify-center pulse">
+                                    <i class="fas fa-user text-white text-lg"></i>
+                                </div>
+                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white shadow-lg rounded-lg p-2 w-48">
+                                    <div class="font-semibold">Emma Wilson</div>
+                                    <div class="text-sm text-gray-600">Los Angeles, CA</div>
+                                    <div class="flex items-center mt-1">
+                                        <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                        <span class="text-xs text-green-600">All Good</span>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Immediate Needs -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">4. Do you have any immediate needs?</label>
-                                <div class="mt-1 space-y-2">
-                                    <div class="flex items-center">
-                                        <input id="food" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                        <label for="food" class="ml-2 block text-sm text-gray-700">Food</label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="shelter" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                        <label for="shelter" class="ml-2 block text-sm text-gray-700">Shelter</label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="first-aid" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                        <label for="first-aid" class="ml-2 block text-sm text-gray-700">First Aid</label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="other-needs" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                        <label for="other-needs" class="ml-2 block text-sm text-gray-700">Other (please specify)</label>
-                                    </div>
-                                    <div id="other-needs-field" class="hidden mt-2">
-                                        <textarea rows="2" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="Please describe your needs"></textarea>
+                        </div>
+                        
+                        <div class="map-marker" style="top: 20%; left: 60%;">
+                            <div class="relative">
+                                <div class="w-12 h-12 rounded-full bg-danger flex items-center justify-center">
+                                    <i class="fas fa-user text-white text-lg"></i>
+                                </div>
+                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white shadow-lg rounded-lg p-2 w-48">
+                                    <div class="font-semibold">David Brown</div>
+                                    <div class="text-sm text-gray-600">Houston, TX</div>
+                                    <div class="flex items-center mt-1">
+                                        <span class="h-2 w-2 rounded-full bg-red-500 mr-1"></span>
+                                        <span class="text-xs text-red-600">Needs Help</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        Submit Check-Point
-                    </button>
-                    <button type="button" id="cancelCheckpoint" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
-                    </button>
+
+                <!-- Recent Check-ins -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Check-ins</h2>
+                    <div class="space-y-4">
+                        <div class="checkin-card bg-gray-50 rounded-lg p-4 border-l-4 border-success">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h3 class="font-semibold">Sarah Johnson</h3>
+                                    <p class="text-sm text-gray-600">Checked in 2 hours ago</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-success">All Good</div>
+                                    <div class="text-xs text-gray-500">New York, NY</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-center text-sm">
+                                <i class="fas fa-check-circle text-success mr-2"></i>
+                                <span>Children: 2 | Contact: Available</span>
+                            </div>
+                        </div>
+                        
+                        <div class="checkin-card bg-gray-50 rounded-lg p-4 border-l-4 border-warning">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h3 class="font-semibold">Michael Anderson</h3>
+                                    <p class="text-sm text-gray-600">Checked in 1 day ago</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-warning">Needs Check-in</div>
+                                    <div class="text-xs text-gray-500">Chicago, IL</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-center text-sm">
+                                <i class="fas fa-exclamation-circle text-warning mr-2"></i>
+                                <span>Children: 1 | Contact: Available</span>
+                            </div>
+                        </div>
+                        
+                        <div class="checkin-card bg-gray-50 rounded-lg p-4 border-l-4 border-danger">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h3 class="font-semibold">David Brown</h3>
+                                    <p class="text-sm text-gray-600">Missed check-in 3 days ago</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-danger">Needs Help</div>
+                                    <div class="text-xs text-gray-500">Houston, TX</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-center text-sm">
+                                <i class="fas fa-times-circle text-danger mr-2"></i>
+                                <span>Children: 3 | Contact: Unavailable</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="w-full md:w-1/3">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white rounded-xl shadow-md p-4">
+                        <div class="flex items-center">
+                            <div class="rounded-lg bg-green-100 p-3">
+                                <i class="fas fa-users text-success text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Family Members</p>
+                                <p class="text-2xl font-bold">24</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-4">
+                        <div class="flex items-center">
+                            <div class="rounded-lg bg-blue-100 p-3">
+                                <i class="fas fa-map-marker-alt text-secondary text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm text-gray-600">Active Today</p>
+                                <p class="text-2xl font-bold">18</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Communication Modes -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Communication Modes</h2>
+                    <div class="space-y-4">
+                        <div class="communication-mode bg-blue-50 rounded-lg p-4 border border-blue-200">
+                            <div class="flex items-start">
+                                <div class="bg-blue-100 p-2 rounded-lg">
+                                    <i class="fas fa-wifi text-blue-600 text-lg"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="font-semibold">Internet</h3>
+                                    <p class="text-sm text-gray-600 mt-1">Primary communication method</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="communication-mode bg-purple-50 rounded-lg p-4 border border-purple-200">
+                            <div class="flex items-start">
+                                <div class="bg-purple-100 p-2 rounded-lg">
+                                    <i class="fas fa-satellite text-purple-600 text-lg"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="font-semibold">Satellite</h3>
+                                    <p class="text-sm text-gray-600 mt-1">Backup communication when no internet</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="communication-mode bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                            <div class="flex items-start">
+                                <div class="bg-yellow-100 p-2 rounded-lg">
+                                    <i class="fas fa-bluetooth-b text-yellow-600 text-lg"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="font-semibold">Bluetooth</h3>
+                                    <p class="text-sm text-gray-600 mt-1">Local communication when both nearby</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="communication-mode bg-red-50 rounded-lg p-4 border border-red-200">
+                            <div class="flex items-start">
+                                <div class="bg-red-100 p-2 rounded-lg">
+                                    <i class="fas fa-broadcast-tower text-red-600 text-lg"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="font-semibold">Radio Wave</h3>
+                                    <p class="text-sm text-gray-600 mt-1">Long-range communication without infrastructure</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Import -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Import Contacts</h2>
+                    <div class="space-y-4">
+                        <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-address-book text-lg mr-2"></i>
+                            Import from Phone Contacts
+                        </button>
+                        
+                        <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-lg mr-2"></i>
+                            Import Specific Group
+                        </button>
+                        
+                        <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user-plus text-lg mr-2"></i>
+                            Add Individual Contacts
+                        </button>
+                        
+                        <div class="mt-6">
+                            <h3 class="font-semibold text-gray-700 mb-2">Invite Family Members</h3>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-envelope mr-2"></i> Email
+                                </button>
+                                <button class="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-2 px-4 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-sms mr-2"></i> SMS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Questionnaire Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="questionnaireModal">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Family Concern Questionnaire</h3>
+                <button class="text-gray-500 hover:text-gray-700" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="concern">
+                        Why are you concerned about any family members within this app?
+                    </label>
+                    <textarea id="concern" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" rows="4" placeholder="Please describe your concerns..."></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100" id="cancelModal">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <footer class="bg-primary text-white py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="flex items-center">
-                    <i class="fas fa-users text-indigo-600 mr-2"></i>
-                    <span class="text-lg font-bold text-gray-900">Family Check-Point</span>
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center">
+                        <i class="fas fa-map-marker-alt text-accent text-2xl mr-2"></i>
+                        <span class="font-bold text-xl">Family Check-Point</span>
+                    </div>
+                    <p class="mt-2 text-blue-200">Keeping families connected and safe</p>
                 </div>
-                <div class="mt-4 md:mt-0">
-                    <p class="text-center text-sm text-gray-500">&copy; 2023 Family Check-Point. All rights reserved.</p>
-                </div>
-                <div class="mt-4 md:mt-0 flex space-x-6">
-                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                <div class="flex space-x-6">
+                    <a href="#" class="text-blue-200 hover:text-white">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                    <a href="#" class="text-blue-200 hover:text-white">
                         <i class="fab fa-twitter"></i>
                     </a>
-                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                    <a href="#" class="text-blue-200 hover:text-white">
                         <i class="fab fa-instagram"></i>
                     </a>
+                    <a href="#" class="text-blue-200 hover:text-white">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
                 </div>
+            </div>
+            <div class="mt-8 text-center text-blue-200 text-sm">
+                &copy; 2023 Family Check-Point. All rights reserved.
             </div>
         </div>
     </footer>
 
     <script>
-        // Mobile menu toggle
-        document.querySelector('.mobile-menu-button').addEventListener('click', function() {
-            document.querySelector('.mobile-menu').classList.toggle('hidden');
+        // Modal functionality
+        const modal = document.getElementById('questionnaireModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelModalBtn = document.getElementById('cancelModal');
+        
+        // Show modal
+        setTimeout(() => {
+            modal.classList.remove('hidden');
+        }, 2000);
+        
+        // Close modal
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
         });
-
-        // Check-Point modal
-        const checkpointBtn = document.getElementById('checkpointBtn');
-        const checkpointModal = document.getElementById('checkpointModal');
-        const cancelCheckpoint = document.getElementById('cancelCheckpoint');
-
-        checkpointBtn.addEventListener('click', function() {
-            checkpointModal.classList.remove('hidden');
+        
+        cancelModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
         });
-
-        cancelCheckpoint.addEventListener('click', function() {
-            checkpointModal.classList.add('hidden');
-        });
-
-        // Children location radio buttons
-        const sameLocation = document.getElementById('same-location');
-        const differentLocation = document.getElementById('different-location');
-        const childrenLocationFields = document.getElementById('children-location-fields');
-
-        sameLocation.addEventListener('change', function() {
-            if (this.checked) {
-                childrenLocationFields.classList.add('hidden');
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.classList.add('hidden');
             }
         });
-
-        differentLocation.addEventListener('change', function() {
-            if (this.checked) {
-                childrenLocationFields.classList.remove('hidden');
-            }
-        });
-
-        // Other needs checkbox
-        const otherNeeds = document.getElementById('other-needs');
-        const otherNeedsField = document.getElementById('other-needs-field');
-
-        otherNeeds.addEventListener('change', function() {
-            if (this.checked) {
-                otherNeedsField.classList.remove('hidden');
-            } else {
-                otherNeedsField.classList.add('hidden');
-            }
-        });
-
-        // Initialize map (you'll need to replace YOUR_API_KEY with an actual Google Maps API key)
-        function initMap() {
-            // Default to US center
-            const center = { lat: 37.0902, lng: -95.7129 };
-            const map = new google.maps.Map(document.getElementById('familyMap'), {
-                zoom: 4,
-                center: center
+        
+        // Simulate map marker animation
+        document.querySelectorAll('.map-marker').forEach(marker => {
+            marker.addEventListener('click', function() {
+                this.classList.toggle('pulse');
             });
-
-            // Sample family members locations
-            const locations = [
-                { lat: 30.2672, lng: -97.7431, name: "Sarah Johnson", status: "green" },
-                { lat: 41.8781, lng: -87.6298, name: "Robert Wilson", status: "green" },
-                { lat: 34.0522, lng: -118.2437, name: "Michael Smith", status: "yellow" },
-                { lat: 29.7604, lng: -95.3698, name: "Emily Davis", status: "red" }
-            ];
-
-            // Add markers
-            locations.forEach(location => {
-                let icon;
-                if (location.status === "green") {
-                    icon = {
-                        url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                    };
-                } else if (location.status === "yellow") {
-                    icon = {
-                        url: "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"
-                    };
-                } else {
-                    icon = {
-                        url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
-                    };
-                }
-
-                new google.maps.Marker({
-                    position: { lat: location.lat, lng: location.lng },
-                    map: map,
-                    title: location.name,
-                    icon: icon
-                });
-            });
-        }
-
-        // Initialize the map when the page loads
-        window.onload = initMap;
+        });
     </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=DominiqueZhee/family-check-point-app" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
